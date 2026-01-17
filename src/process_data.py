@@ -17,7 +17,21 @@ def load_and_merge_data():
     # 4. Merge with Constructors 
     df = pd.merge(df, constructors[['constructorId', 'constructorRef']], on='constructorId', how='left')
     
-    # 5. Rename columns
+    # Sort by Year and Round (Crucial for calculating points over time)
+    df = df.sort_values(by=['year', 'round'])
+    
+    # 5. Get Driver Points Before Race
+    # Group by year and driver, then take a cumulative sum of points.
+    # shift(1) to get the points BEFORE this race.
+    df['driver_points_before'] = df.groupby(['year', 'driverRef'])['points'].cumsum().shift(1)
+    
+    # The first race of the season will be NaN, so fill with 0
+    df['driver_points_before'] = df['driver_points_before'].fillna(0)
+    
+    # Safety check: ensure
+    df.loc[df['round'] == 1, 'driver_points_before'] = 0
+
+    # 6. Rename columns
     df.rename(columns={
         'name': 'gp_name',
         'positionOrder': 'finish_position',
@@ -26,7 +40,7 @@ def load_and_merge_data():
         'driverRef': 'driver'
     }, inplace=True)
     
-    # 6. Filter: Keep only data from 1980 onwards
+    # 7. Filter: Keep only data from 1980 onwards
     # Using older data (1950s) can confuse the model due to different rules/cars
     df = df[df['year'] >= 2000]
     
@@ -42,3 +56,7 @@ if __name__ == "__main__":
     df.to_csv("data/f1_merged_data.csv", index=False)
     print("Saved merged dataset to 'data/f1_merged_data.csv'")
     
+# Check if it worked
+    print("\nSample: Hamilton 2021 (Notice points increasing?)")
+    check = df[(df['driver'] == 'hamilton') & (df['year'] == 2021)][['round', 'driver_points_before', 'points']]
+    print(check.head())

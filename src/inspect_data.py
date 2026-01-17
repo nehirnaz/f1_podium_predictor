@@ -2,11 +2,11 @@ import pandas as pd
 import os
 
 # Define the path
-csv_path = "data/f1_comprehensive_dataset_2020_2025.csv"
+csv_path = "data/f1_merged_data.csv"
 
 # Check if file exists
 if os.path.exists(csv_path):
-    print(f"✅ Found file at {csv_path}")
+    print(f"Found file at {csv_path}")
     try:
         df = pd.read_csv(csv_path)
         print("\n--- DATASET INFO ---")
